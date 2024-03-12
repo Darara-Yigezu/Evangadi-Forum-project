@@ -1,13 +1,16 @@
 const mysql2=require('mysql2');
+// Create a connection pool
 const dbConnection=mysql2.createPool({
-user:"evangadi-admin ",
-database:"evangadi-db",
+user:process.env.USER,
+database:process.env.DATABASE,
 host:"localhost",
-password:"Darex@657585",
+password:process.env.PASSWORD,
 connectionLimit:10
 });
+// console.log(process.env.PASSWORD)
+// console.log(process.env.JWT_SECRET)
 
-//export the connection to be used in other
+//export the connection pool
 module.exports=dbConnection.promise;
 
 

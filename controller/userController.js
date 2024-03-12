@@ -1,13 +1,15 @@
-//db connection
+//db connection(backend part)
 const dbConnection=require("../db/dbConfig");
 //for encrypting  password
 const bcrypt=require('bcrypt');
 const {StatusCode, StatusCodes}=require("http-status-codes");
+const jwt=require("jsonwebtoken");
 
 // async function register(req,res){
 //     res.send('register');
 // }
 
+//login,reg,check comes from user route w/c connect to db
   async function register(req,res){
     const {username, firstname, lastname, email,  password} = req.body;
     if(!email || !password || !firstname || !lastname || !username ){
@@ -36,14 +38,19 @@ const {StatusCode, StatusCodes}=require("http-status-codes");
  try{
 const [user]=await dbConnection.query("select, username,userid from users where username=? or  email=?",[email]);
  if(user.length==0){
-  return res.status(StatusCodes.NOT_FOUND).json({msg:`No user found with this ${id}`})
+  return res.status(StatusCodes.NOT_FOUND).json({msg:"invalid  credentials"})
  }
 //compare password
 const isMatch=await bcrypt.compare(password,user[0].password);
 if (!isMatch) {
   return res.status(StatusCodes.NOT_FOUND).json({msg:`No user found with this ${id}`})
   }
-  return res.json({user})
+  const username=user[0].username
+  const userid=user[0].userid
+//  const token= jwt.sign({username,userid},"secret",{expiresIn:"30d"})
+const token= jwt.sign({username,userid},process.env.JWT_SECRET,{expiresIn:"30d"})
+
+ return res.status(StatusCodes.OK).json({msg:"user login successfully",token})
 
  }catch(error){
     console.log(error.message);
@@ -60,6 +67,9 @@ if (!isMatch) {
 }
 
  async function checkUser(req,res){
-    res.send('check user ');
+  const username=req.user.username;
+  const userid=req.user.userid;
+  res.status(StatusCodes.OK).json({msg:"Valid user",username,userid})
+    // res.send('check user ');//remove it
 }
 module.exports = {register,login,checkUser};
